@@ -1,0 +1,172 @@
+{
+  "name": "API-Google Sheet-vue",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "data",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a02c9f5b-ae24-4891-99c9-400b242edf45",
+      "name": "Webhook",
+      "webhookId": "a644cc25-a505-4798-93f0-9ec07fa46c67"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "10qkyGOTvy5_pvlWSLTPSbG9qlaFKSXx_rfoGIsjBksI",
+          "mode": "list",
+          "cachedResultName": "ลงทะเบียน_week5",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/10qkyGOTvy5_pvlWSLTPSbG9qlaFKSXx_rfoGIsjBksI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1135121226,
+          "mode": "list",
+          "cachedResultName": "register",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/10qkyGOTvy5_pvlWSLTPSbG9qlaFKSXx_rfoGIsjBksI/edit#gid=1135121226"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "08b1115e-b0eb-4ccf-b625-5a84c2ccd9d9",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gBZkVAxxlB5V0lNp",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8425a2e1-156c-438a-9a10-3918df17b846",
+              "name": "tdate",
+              "value": "={{ $json['ประทับเวลา'] }}",
+              "type": "string"
+            },
+            {
+              "id": "485b7d5c-5e3e-40cd-9565-58231420aa86",
+              "name": "id",
+              "value": "={{ $json['รหัสนักศึกษา'] }}",
+              "type": "number"
+            },
+            {
+              "id": "76242f0c-5131-43d3-8226-cc6ba6af8dc8",
+              "name": "fullname",
+              "value": "={{ $json['ชื่อ-นามสกุล'] }}",
+              "type": "string"
+            },
+            {
+              "id": "97dde3e8-fa43-41ee-a0a5-8cdfaf681850",
+              "name": "department",
+              "value": "={{ $json['คณะ'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "9cd92d17-8d82-4017-8c6d-aa723a06cd37",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        624,
+        0
+      ],
+      "id": "1947c16f-2ff4-4563-bd4e-dc1f9017217c",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "content": "67705343\n\nบรรดิษฐ์ แย่ทิว \n\nAPI ดึงข้อมูล Google Sheet และ เขียนเว็บเรียกใช้งาน API ผ่าน Vue.js\nทำให้แสดงผลสวยงาม",
+        "height": 128,
+        "width": 464
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        224,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "1cbb537b-5dee-4c2c-a6bd-f912c34e8c57",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e5be5524-cdf9-4fbf-934a-9711adf0c782",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d3c21c144165c7ec8085c31b5b00aa82f92fd48a0736053b25ffcff4bc759448"
+  },
+  "id": "Fwha3BCmcKZEzfxh",
+  "tags": []
+}
