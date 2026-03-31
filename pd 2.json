@@ -1,0 +1,157 @@
+{
+  "name": "pd 2",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "products",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "65970372-eb0a-4a6c-9470-f3c9c20cc7ce",
+      "name": "Webhook",
+      "webhookId": "a644cc25-a505-4798-93f0-9ec07fa46c67"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1manSp82p7f-rMdAfP9CDGJdTbUfM3a_i3ngdqEJEuO0",
+          "mode": "list",
+          "cachedResultName": "products_67705343",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1manSp82p7f-rMdAfP9CDGJdTbUfM3a_i3ngdqEJEuO0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Products",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1manSp82p7f-rMdAfP9CDGJdTbUfM3a_i3ngdqEJEuO0/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f5113dc4-a512-47f4-b5f3-b68ccaa4145e",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3Efb8P75VgIfUyzS",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8425a2e1-156c-438a-9a10-3918df17b846",
+              "name": "productId",
+              "value": "={{ $json['รหัสสินค้า'] }}",
+              "type": "string"
+            },
+            {
+              "id": "485b7d5c-5e3e-40cd-9565-58231420aa86",
+              "name": "productName",
+              "value": "={{ $json['ชื่อสินค้า'] }}",
+              "type": "string"
+            },
+            {
+              "id": "76242f0c-5131-43d3-8226-cc6ba6af8dc8",
+              "name": "quantity",
+              "value": "={{ $json['จำนวน'] }}",
+              "type": "string"
+            },
+            {
+              "id": "97dde3e8-fa43-41ee-a0a5-8cdfaf681850",
+              "name": "price",
+              "value": "={{ $json['ราคา'] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": "={{ false }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "201f2f0e-751d-429d-9ef5-939c3e0f1764",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        624,
+        0
+      ],
+      "id": "12d15a0c-77c1-4f4b-8d19-464e66bf0179",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b29ceac0-5bf6-4d02-969a-c5670cebb542",
+  "meta": {
+    "instanceId": "d3c21c144165c7ec8085c31b5b00aa82f92fd48a0736053b25ffcff4bc759448"
+  },
+  "id": "GGSSEuHo8v1TDK2V",
+  "tags": []
+}
