@@ -69,7 +69,7 @@ const loading = ref(false)
 const fetchData = async () => {
   loading.value = true
   try {
-    const response = await fetch('http://localhost:5678/webhook/data')
+    const response = await fetch('http://localhost:5678/webhook-test/data')
     const data = await response.json()
     users.value = data
   } catch (error) {
