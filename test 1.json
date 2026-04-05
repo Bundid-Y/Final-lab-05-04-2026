@@ -1,0 +1,120 @@
+{
+  "name": "test 1",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1_av9t77ef_bxYaCOCHqQNqjXOULcAHA48CNgOggoSB0",
+          "mode": "list",
+          "cachedResultName": "รับข้อมูลการเบิกอุปกรณ์ ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_av9t77ef_bxYaCOCHqQNqjXOULcAHA48CNgOggoSB0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1386549169,
+          "mode": "list",
+          "cachedResultName": "การตอบแบบฟอร์ม 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_av9t77ef_bxYaCOCHqQNqjXOULcAHA48CNgOggoSB0/edit#gid=1386549169"
+        },
+        "event": "rowUpdate",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6814ced1-a730-4b6b-9f11-d0e7bdfacd48",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "n39n1VLXgkLHYUb9",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n\n  const serial = item.json[\"ประทับเวลา\"];\n\n  const excelEpoch = new Date(1899, 11, 30);\n  const date = new Date(excelEpoch.getTime() + serial * 86400000);\n\n  item.json[\"วันที่\"] = date.toLocaleString(\"th-TH\");\n\n  return item;\n});;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "2993a46e-32b4-4fde-9fe4-a8fc8b2c9f99",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "eballoha@gmail.com",
+        "subject": "ข้อมูลการเบิกอุปกรณ์",
+        "emailType": "text",
+        "message": "=ข้อมูลการเบิกอุปกรณ์ \nชื่อ-นามสกุล {{ $json[\"ชื่อ – นามสกุล \"] }}\nแผนก {{ $json[\"แผนก  \"] }}\nรายชื่ออุปกรณ์ {{ $json[\"  รายชื่ออุปกรณ์  \"] }}\nจำนวนที่เบิก {{ $json[\"  จำนวนที่เบิก   \"] }}\nวันที่ {{ $json[\"วันที่\"] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "c0874dfa-e375-4a5d-bed7-138bbefb608a",
+      "name": "Send a message",
+      "webhookId": "dc6da89a-c918-4088-b041-c621f53ece98",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "5HSPrfN9pxOh7nzX",
+          "name": "Gmail account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2bf9bfbc-e3d7-46a2-b3fb-78c5f5f49588",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d3c21c144165c7ec8085c31b5b00aa82f92fd48a0736053b25ffcff4bc759448"
+  },
+  "id": "UrgohQXj9O4dnrlf",
+  "tags": []
+}
