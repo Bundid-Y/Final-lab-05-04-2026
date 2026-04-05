@@ -6,8 +6,8 @@
           <div class="form-shell">
             <div class="card-head">
               <p class="eyebrow mb-2">Inventory Portal</p>
-              <h2 class="title mb-1">Create Product</h2>
-              <small class="subtitle">Submit product data to n8n webhook</small>
+              <h2 class="title mb-1">Webhook Form Sender</h2>
+              <small class="subtitle">Send data to n8n webhook: /webhook/formdata</small>
             </div>
 
             <div class="card-body p-4 p-md-5">
@@ -22,23 +22,50 @@
               <form @submit.prevent="submitForm">
                 <div class="mb-3">
                   <label class="form-label">Product ID *</label>
-                  <input v-model="form.productId" type="text" class="form-control custom-input" required />
+                  <input
+                    v-model.trim="form.productId"
+                    name="productId"
+                    type="text"
+                    class="form-control custom-input"
+                    required
+                  />
                 </div>
 
                 <div class="mb-3">
                   <label class="form-label">Product Name *</label>
-                  <input v-model="form.productName" type="text" class="form-control custom-input" required />
+                  <input
+                    v-model.trim="form.productName"
+                    name="productName"
+                    type="text"
+                    class="form-control custom-input"
+                    required
+                  />
                 </div>
 
                 <div class="row g-3">
                   <div class="col-12 col-md-6">
                     <label class="form-label">Quantity *</label>
-                    <input v-model.number="form.quantity" type="number" min="0" class="form-control custom-input" required />
+                    <input
+                      v-model.number="form.quantity"
+                      name="quantity"
+                      type="number"
+                      min="0"
+                      class="form-control custom-input"
+                      required
+                    />
                   </div>
 
                   <div class="col-12 col-md-6">
                     <label class="form-label">Price *</label>
-                    <input v-model.number="form.price" type="number" min="0" class="form-control custom-input" required />
+                    <input
+                      v-model.number="form.price"
+                      name="price"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      class="form-control custom-input"
+                      required
+                    />
                   </div>
                 </div>
 
@@ -57,6 +84,9 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
+
+const WEBHOOK_URL = 'http://localhost:5678/webhook/formdata'
+const FIELD_NAMES = ['productId', 'productName', 'quantity', 'price']
 
 const form = reactive({
   productId: '',
@@ -84,23 +114,23 @@ const submitForm = async () => {
   status.message = ''
 
   try {
-    // ตอนทดสอบใน n8n ให้เปลี่ยนเป็น `/webhook-test/product` และกด "Listen for test event"
-    // หลัง Publish workflow แล้วค่อยใช้ `/webhook/product`
-    const response = await fetch('http://localhost:5678/webhook/product', {
+    const formData = new FormData()
+
+    FIELD_NAMES.forEach((fieldName) => {
+      const value = form[fieldName]
+      formData.append(fieldName, value === null || value === undefined ? '' : String(value))
+    })
+
+    const response = await fetch(WEBHOOK_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        ...form
-      })
+      body: formData
     })
 
     if (!response.ok) {
       throw new Error('Failed to save product')
     }
 
-    status.message = 'Product saved successfully.'
+    status.message = 'Webhook sent successfully.'
     status.type = 'success'
     resetForm()
   } catch (error) {

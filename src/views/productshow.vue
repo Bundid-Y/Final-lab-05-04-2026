@@ -4,8 +4,8 @@
       <div class="headline mb-4">
         <div>
           <p class="eyebrow mb-2">Inventory Portal</p>
-          <h2 class="title mb-1">Product Catalog</h2>
-          <p class="subtitle mb-0">Data loaded from n8n webhook</p>
+          <h2 class="title mb-1">Webhook Data Viewer</h2>
+          <p class="subtitle mb-0">Showing all data from n8n webhook: /webhook/formdata</p>
         </div>
         <button class="btn reload-btn" @click="fetchProducts" :disabled="loading">
           <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
@@ -28,19 +28,21 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>Product ID</th>
-                <th>Product Name</th>
-                <th>Quantity</th>
-                <th>Price</th>
+                <th v-for="column in columns" :key="column">
+                  {{ formatColumnLabel(column) }}
+                </th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(item, index) in products" :key="index">
                 <td class="row-index">{{ index + 1 }}</td>
-                <td>{{ item.productId }}</td>
-                <td class="product-name">{{ item.productName }}</td>
-                <td>{{ item.quantity }}</td>
-                <td class="price">{{ formatPrice(item.price) }}</td>
+                <td
+                  v-for="column in columns"
+                  :key="`${index}-${column}`"
+                  :class="getCellClass(column)"
+                >
+                  {{ formatCellValue(item[column], column) }}
+                </td>
               </tr>
             </tbody>
           </table>
@@ -57,55 +59,112 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 
+const WEBHOOK_URL = 'http://localhost:5678/webhook/formdata'
+
 const products = ref([])
+const columns = ref([])
 const loading = ref(false)
 const errorMessage = ref('')
 
 const normalizeProducts = (payload) => {
-  let list = []
-
   if (Array.isArray(payload)) {
-    list = payload
-  } else if (Array.isArray(payload?.data)) {
-    list = payload.data
-  } else if (Array.isArray(payload?.items)) {
-    list = payload.items
+    return payload
+      .map((item) => (item?.json && typeof item.json === 'object' ? item.json : item))
+      .filter((item) => item && typeof item === 'object' && !Array.isArray(item))
   }
 
-  return list
-    .map((item) => (item?.json && typeof item.json === 'object' ? item.json : item))
-    .filter((item) => item && typeof item === 'object')
+  if (Array.isArray(payload?.data)) {
+    return normalizeProducts(payload.data)
+  }
+
+  if (Array.isArray(payload?.items)) {
+    return normalizeProducts(payload.items)
+  }
+
+  if (payload?.json && typeof payload.json === 'object') {
+    return normalizeProducts(payload.json)
+  }
+
+  if (payload && typeof payload === 'object') {
+    return [payload]
+  }
+
+  return []
 }
 
-const getField = (item, keys) => {
-  for (const key of keys) {
-    if (item[key] !== undefined && item[key] !== null && item[key] !== '') {
-      return item[key]
+const buildColumns = (items) => {
+  const keySet = new Set()
+
+  items.forEach((item) => {
+    Object.keys(item).forEach((key) => keySet.add(key))
+  })
+
+  const priorityColumns = ['productId', 'productName', 'quantity', 'price']
+  const orderedKeys = []
+
+  priorityColumns.forEach((key) => {
+    if (keySet.has(key)) {
+      orderedKeys.push(key)
+      keySet.delete(key)
     }
-  }
-  return '-'
+  })
+
+  return [...orderedKeys, ...Array.from(keySet)]
 }
 
-const mapProduct = (item) => {
-  return {
-    productId: getField(item, ['productId', 'product_id', 'id', 'productID']),
-    productName: getField(item, ['productName', 'product_name', 'name', 'title', 'product']),
-    quantity: getField(item, ['quantity', 'qty', 'amount']),
-    price: getField(item, ['price', 'unitPrice', 'cost'])
-  }
+const formatColumnLabel = (column) => {
+  return String(column)
+    .replace(/_/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
-const formatPrice = (price) => {
-  if (price === '-' || price === '' || price === null || price === undefined) {
-    return '-'
-  }
+const formatNumber = (value) => {
+  const parsedValue = Number(value)
 
-  const value = Number(price)
-  if (Number.isNaN(value)) return price
+  if (Number.isNaN(parsedValue)) {
+    return value
+  }
 
   return new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 2
-  }).format(value)
+  }).format(parsedValue)
+}
+
+const formatCellValue = (value, column) => {
+  if (value === '' || value === null || value === undefined) {
+    return '-'
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => (typeof item === 'object' ? JSON.stringify(item) : String(item))).join(', ')
+  }
+
+  if (typeof value === 'object') {
+    return JSON.stringify(value)
+  }
+
+  if (column.toLowerCase().includes('price') || column.toLowerCase().includes('cost')) {
+    return formatNumber(value)
+  }
+
+  if (typeof value === 'number') {
+    return formatNumber(value)
+  }
+
+  return value
+}
+
+const getCellClass = (column) => {
+  if (column === 'productName' || column.toLowerCase().includes('name')) {
+    return 'product-name'
+  }
+
+  if (column.toLowerCase().includes('price') || column.toLowerCase().includes('cost')) {
+    return 'price'
+  }
+
+  return ''
 }
 
 const fetchProducts = async () => {
@@ -113,20 +172,22 @@ const fetchProducts = async () => {
   errorMessage.value = ''
 
   try {
-    // ตอนทดสอบใน n8n ให้เปลี่ยนเป็น `/webhook-test/products` และกด "Listen for test event"
-    // หลัง Publish workflow แล้วค่อยใช้ `/webhook/products`
-    const response = await fetch('http://localhost:5678/webhook/products')
+    const response = await fetch(WEBHOOK_URL)
 
     if (!response.ok) {
       throw new Error('Failed to load products')
     }
 
     const result = await response.json()
-    products.value = normalizeProducts(result).map(mapProduct)
+    const normalizedProducts = normalizeProducts(result)
+
+    products.value = normalizedProducts
+    columns.value = buildColumns(normalizedProducts)
   } catch (error) {
     console.error(error)
-    errorMessage.value = 'Unable to load product data. Please check the n8n flow.'
+    errorMessage.value = 'Unable to load data from n8n webhook. Please check the workflow and webhook URL.'
     products.value = []
+    columns.value = []
   } finally {
     loading.value = false
   }
